@@ -1,0 +1,13 @@
+{
+  "name": "client-device",
+  "version": "0.1.1",
+  "author": "Smartlogger",
+  "license": "BSD",
+  "devDependencies": {
+    "crc": "^3.2.1",
+    "mysql": "^2.5.4"
+  },
+  "dependencies": {
+    "easy-crc": "0.0.2"
+  }
+}
