@@ -2,23 +2,25 @@ const net = require('net');
 const client = new net.Socket();
 var crc = require('crc');
 
-const port = 3000;
-const host = '0.0.0.0';
 
-/* const port = 7070;
-const host = '127.0.0.1'; */
+// Change to your server port and address
+const port = 7070;
+const host = '127.0.0.1';
 
 
-/** Function to convert hex to string */
+// Convert hex to text
 var hexToString = function (str) {
     return Buffer.from(str, 'hex').toString('utf8');
 }
 
-/** Function to convert string to hex */
+
+// convert text to hex
 var stringToHex = function (str) {
     return Buffer.from(str, 'utf8').toString('hex');
 }
 
+
+/** Encapsulate message to Teltonika codec12 */
 var strigToCodec12 = function (input) {
     var l = input.length + 8;
     var dataLength = ('00000000' + l.toString(16)).slice(-8);
@@ -26,11 +28,9 @@ var strigToCodec12 = function (input) {
     var CodecId = "0c"; // codec12
     var CommandeSize = ('00000000' + input.length.toString(16)).slice(-8);
     var commandHex = stringToHex(input);
-
     // CRC16
     var hexcrc = Buffer.from(CodecId + "01" + type + CommandeSize + commandHex + "01", 'hex');
-    var checksum =  ('00000000' + crc.crc16(hexcrc).toString(16)).slice(-8);
-
+    var checksum = ('00000000' + crc.crc16(hexcrc).toString(16)).slice(-8);
     return "00000000" + dataLength + CodecId + "01" + type + CommandeSize + commandHex + "01" + checksum;
 }
 
@@ -47,16 +47,22 @@ client.on('close', function () {
     console.log('Connection closed');
 });
 
+
+/** connect to remote server */
 client.connect(port, host, function () {
     console.log('Connected');
     client.write(Buffer.from('000f333534303138313134383537373131', 'hex'));
 
-    setTimeout(() => {
-        client.write(Buffer.from('00000000000000900C010600000088494E493A323031392F372F323220373A3232205254433A323031392F372F323220373A3533205253543A32204552523A312053523A302042523A302043463A302046473A3020464C3A302054553A302F302055543A3020534D533A30204E4F4750533A303A3330204750533A31205341543A302052533A332052463A36352053463A31204D443A30010000C78F', 'hex'))
-    }, 3000);
 
+    // Simulate normal message
     setInterval(() => {
-        let codec12Packet = Buffer.from(strigToCodec12('dddddddddddddddddddddddddd hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh gggggggggggggggggggggggggggggggggggggg ffffffffffffffffffffffffffffffffffffffffffffffff ffffffffffffffffffffffffffffffffffffffffff hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh gggggggggggggggggggggggggggggggggggggggggggggggggg fffffffffffffffffffffffffffffffffffffffffffffffffffffff 123456789000000000000000000000000000000011111111111111111111111111111000000000000 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccc dddddddddddddddddddddddddd hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh gggggggggggggggggggggggggggggggggggggg ffffffffffffffffffffffffffffffffffffffffffffffff ffffffffffffffffffffffffffffffffffffffffff hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh gggggggggggggggggggggggggggggggggggggggggggggggggg fffffffffffffffffffffffffffffffffffffffffffffffffffffff 123456789000000000000000000000000000000011111111111111111111111111111000000000000 AYMEN: FROM A SIMULATED DEVICE'), 'hex');
+        let codec12Packet = Buffer.from(strigToCodec12('MEDISAIL&1=2661.00&2=324300.00&3=0&4=0&5=355000.00&6=358.10&7=13.40&8=53.30&9=12467683.00&10=48500.00&11=22000.00&12=51&13=26&14=344500.00&15=394.60&20=4.50&21=-1000000000.00&22=-1000000000.00&23=4.62&24=6.07&25=278.35&26=293.35&27=101300.00&28=278.35&29=-1000000000.00&30=56.80&31=42.00&32=101300.00&33=278.35&34=-0.10&39=9.13&40=6.36&42=1&AYMEN'), 'hex');
         client.write(codec12Packet);
     }, 10000);
+
+    // Simulate corrupted message
+    setInterval(() => {
+        let codec12Corrupt = Buffer.from(strigToCodec12('MEDISAIL&1=2661.00&2=324300.00&3=0&4=0&5=355000.00&6=358.10&7=13.40&8=53.30&9=12467683.00&10=48500.00&11=22000.00&12=51&13=26&14=344500.00&15=394.60&20=4.50&21=-1000000000.00&22=-1000000000.00&23=4.62&24=6.07&25=278.35&26=293.35&27=101300.00&28=278.35&29=-1000000000.00&30=56.80&31=42.00&32=101300.00&33=278.35��2�����Ʌ&39=9.13&40=6.36&42=1&AYMEN'), 'hex');
+        client.write(codec12Corrupt);
+    }, 30000);
 });
